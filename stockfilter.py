@@ -23,4 +23,7 @@ app = Flask(__name__)
 def home():
     return 'Hello'
 
+@app.route('/sf/api/v1.0/filter/', methods=['GET'])
+def filter():
+    return 'filter process ...'
 
