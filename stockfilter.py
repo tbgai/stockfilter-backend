@@ -21,9 +21,13 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return 'Hello'
+    return 'Hello, this is stockfilter'
 
-@app.route('/sf/api/v1.0/filter/', methods=['GET'])
+@app.route('/sf/api/v1.0/filter/', methods=['POST'])
 def filter():
     return 'filter process ...'
+
+@app.route('/sf/api/v1.0/querypos/', methods=['GET'])
+def querypos():
+    return 60
 
