@@ -9,25 +9,28 @@ stockfilter.py
 """
 import os
 import sys
+from flask import Flask 
+from stkfilter.filtermgr import FilterMgr
 
 # import libraries in lib directory
 base_path = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(base_path, 'lib'))
 
-
-from flask import Flask 
-
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return 'Hello, this is stockfilter'
+    filtermgr = FilterMgr()
+    return filtermgr.version()
 
-@app.route('/sf/api/v1.0/filter/', methods=['POST'])
-def filter():
-    return 'filter process ...'
+@app.route('/sf/api/v1.0/stockfilter/', methods=['POST'])
+def stockfilter():
+    filtermgr = FilterMgr()
+    return filtermgr.stockfilter()
 
 @app.route('/sf/api/v1.0/querypos/', methods=['GET'])
 def querypos():
-    return 60
+    filtermgr = FilterMgr()
+    return filtermgr.querypos()
+
 
