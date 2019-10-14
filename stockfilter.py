@@ -33,4 +33,9 @@ def querypos():
     filtermgr = FilterMgr()
     return filtermgr.querypos()
 
+@app.route('/sf/api/v1.0/queryres/', methods=['GET'])
+def queryres():
+    filtermgr = FilterMgr()
+    return filtermgr.queryres()
+
 
