@@ -21,6 +21,9 @@ class FilterMgr( object ):
     def querypos( self ):
         return "50"
 
+    def queryres( self ):
+        return "000111.SZ"
+
 
 
 
