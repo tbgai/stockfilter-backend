@@ -9,7 +9,8 @@ stockfilter.py
 """
 import os
 import sys
-from flask import Flask 
+from flask import Flask, make_response, request
+import json
 from stkfilter.filtermgr import FilterMgr
 
 # import libraries in lib directory
@@ -17,6 +18,7 @@ base_path = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(base_path, 'lib'))
 
 app = Flask(__name__)
+
 
 @app.route('/')
 def home():
@@ -26,16 +28,24 @@ def home():
 @app.route('/sf/api/v1.0/stockfilter/', methods=['POST'])
 def stockfilter():
     filtermgr = FilterMgr()
-    return filtermgr.stockfilter()
+    rst = make_response( json.dumps(filtermgr.stockfilter(request)) )
+    rst.headers['Access-Control-Allow-Origin'] = '*'
+    #rst.headers['Access-Control-Allow-Methods'] = 'POST'
+    rst.mimetype = 'application/json'
+    return rst
 
 @app.route('/sf/api/v1.0/querypos/', methods=['GET'])
 def querypos():
     filtermgr = FilterMgr()
-    return filtermgr.querypos()
+    rst = make_response( filtermgr.querypos(request) )
+    rst.headers['Access-Control-Allow-Origin'] = '*'
+    return rst
 
 @app.route('/sf/api/v1.0/queryres/', methods=['GET'])
 def queryres():
     filtermgr = FilterMgr()
-    return filtermgr.queryres()
+    rst = make_response( filtermgr.queryres(request) )
+    rst.headers['Access-Control-Allow-Origin'] = '*'
+    return rst
 
 
