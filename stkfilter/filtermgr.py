@@ -6,60 +6,75 @@ Created on Fri Oct 11 18:52:17 2019
 
 filtermgr.py
 """
+import uuid
+import threading
+from stkfilter.derivativeFilter import DerivativeFilter
+from stkfilter.stockquery import StockQuery
+
+
+def derivativeFilterStock( sid, path, basestk, delta2, delta1factor, 
+                          delta2factor, stkcount ):
+    #print( "线程任务中收到的数据：{0},\n{1},\n{2},\n{3},\n{4}\n".format(
+    #           basestk, delta2, delta1factor, delta2factor, stkcount ) )
+    dfs = DerivativeFilter( sid, path, basestk, delta2, delta1factor, 
+                           delta2factor, stkcount )
+    dfs.filterStock()
+
 
 class FilterMgr( object ):
     
-    def __init__( self ):
-        pass
+    def __init__( self, path ):
+        self.base_path = path
     
     def version( self ):
         return "v0.1"
     
     def stockfilter( self, request ):
         
+        # Session ID
+        SID = uuid.uuid1()
+        strSID = "{}".format( SID )
+        
         # 如果key不存在，则报400 error
         #print( request.headers )
         #print( request.form )
         #print( request.form['basestk'])
+        basestk = request.form['basestk'].split(',')
+        delta2 = int(request.form['delta2'])
+        delta1factor = float(request.form['delta1factor'])
+        delta2factor = float(request.form['delta2factor'])
+        stkcount = int(request.form['stkcount'])
         
-        basestk = request.form['basestk']
-        delta2 = request.form['delta2']
-        delta1factor = request.form['delta1factor']
-        delta2factor = request.form['delta2factor']
-        stkcount = request.form['stkcount']
-        #print( "收到的数据：{0},\n{1},\n{2},\n{3},\n{4}\n".format(
-        #        basestk, delta2, delta1factor, delta2factor, stkcount ) )
-        
-        # 启动线程去执行分析任务
-        # 返回客户端sid
-        
-        
-        sid = "f098213123ssfsdf8890"
-        res = { 'sid': sid }
-        return res 
+        thd = threading.Thread( target=derivativeFilterStock, name=strSID,
+                               args=(strSID, self.base_path, basestk, delta2, 
+                                     delta1factor, delta2factor, stkcount) )
+        thd.start()
+
+        res = { 'sid': strSID }
+        return res
 
     def querypos( self, request ):
         
         # GET
         sid = request.args.get('sid')
-        print( "收到的数据：{0}".format(sid) )
-        
-        # test
-        pos = 101
-        
-        
-        res = { 'pos': pos }
-        return res
+        #print( "收到的数据：{0}".format(sid) )
+        '''
+        查询数据库的进度表，并获取当前sid下的进度信息返回
+        '''
+        stockquery = StockQuery( self.base_path )
+        return stockquery.queryPos( sid )
 
     def queryres( self, request ):
         
         # GET
         sid = request.args.get('sid')
-        print( "收到的数据：{0}".format(sid) )
+        #print( "收到的数据：{0}".format(sid) )
+        '''
+        查询当前sid下的结果信息
+        '''
+        stockquery = StockQuery( self.base_path )
+        return stockquery.queryFilterRes( sid )
         
-        
-        res = { 'res': '000111.SZ' }
-        return res
 
 
 
