@@ -27,7 +27,7 @@ def home():
 
 @app.route('/sf/api/v1.0/stockfilter/', methods=['POST'])
 def stockfilter():
-    filtermgr = FilterMgr()
+    filtermgr = FilterMgr( base_path )
     rst = make_response( json.dumps(filtermgr.stockfilter(request)) )
     rst.headers['Access-Control-Allow-Origin'] = '*'
     #rst.headers['Access-Control-Allow-Methods'] = 'POST'
@@ -36,14 +36,14 @@ def stockfilter():
 
 @app.route('/sf/api/v1.0/querypos/', methods=['GET'])
 def querypos():
-    filtermgr = FilterMgr()
+    filtermgr = FilterMgr( base_path )
     rst = make_response( filtermgr.querypos(request) )
     rst.headers['Access-Control-Allow-Origin'] = '*'
     return rst
 
 @app.route('/sf/api/v1.0/queryres/', methods=['GET'])
 def queryres():
-    filtermgr = FilterMgr()
+    filtermgr = FilterMgr( base_path )
     rst = make_response( filtermgr.queryres(request) )
     rst.headers['Access-Control-Allow-Origin'] = '*'
     return rst
