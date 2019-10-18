@@ -6,6 +6,7 @@ Created on Tue Sep 10 21:40:42 2019
 
 parse stock data from db
 """
+import time
 import datetime
 import pandas as pd
 import numpy as np
@@ -63,31 +64,75 @@ class StockQuery( object ):
 
     def getSingleStockData( self, ts_code, length ):
         
-        #pro = ts.pro_api( token=TUSHARE_TOKEN )
-        '''
-        因接口无法根据记录数返回，考虑到正常交易日是工作日，所以按照两倍长度获取数据，
-        然后截取 length 数量的数据返回
-        '''
         today = datetime.date.today()
         hisday = today - datetime.timedelta(days=2*length)
         start_date = hisday.strftime("%Y%m%d")
         end_date = today.strftime("%Y%m%d")
-        
-        #print( length )
-        #print( start_date )
-        #print( end_date )
-        
-        '''
-        df = pro.query( 'daily', ts_code=ts_code, start_date=start_date,
-                       end_date=end_date, fields='trade_date,close')
-        dl = df.ix[:,1].values.tolist()
-        dl.reverse()
-        if len(dl) < length:
+
+        sql = '''select trade_date,vclose from stock_daily where ts_code='{0}' 
+        and trade_date>='{1}' and trade_date<='{2}' order by trade_date desc 
+        limit {3} '''.format( ts_code, start_date, end_date, length )
+        cursor = self.dbcon.cursor()
+        try:
+            cursor.execute( sql )
+            results = cursor.fetchall()
+            a = []
+            for row in results:
+                trade_date = row[0]
+                vclose = row[1]
+                a.append([trade_date,vclose])
+            df = pd.DataFrame( a, columns=['trade_date','vclose'], index=np.arange(len(a)))
+            dl = df.ix[:,1].values.tolist()
+            dl.reverse()
+            if len(dl) < length:
+                return []
+            else:
+                return dl
+        except:
+            print( "Error: unable to fecth stocklist data" )
             return []
-        else:
-            return dl[0:length]
+
+    def updatePos( self, sid, pos ):
         '''
-        pass
+        1. 根据pos更新进度表
+        2. 进度表包含：进度值，更新时间，sid
+        '''
+        pos = int(pos)
+        update_time = time.strftime("%Y%m%d%H%M%S")
+        
+        sql = '''select * from procstatus where sid = '{0}'
+            '''.format( sid )
+        try:
+            cursor = self.dbcon.cursor()
+            cursor.execute(sql)
+            if ( cursor.fetchone() != None ):
+                # update
+                sql2 = '''update procstatus set pos={0},updatetm='{1}' 
+                where sid='{2}'
+                '''.format(pos,update_time,sid)
+                #print( sql2 )
+                try:
+                    cursor.execute(sql2)
+                    self.dbcon.commit()
+                except:
+                    print("update db error - [procstatus]")
+                    self.dbcon.rollback()
+            else:
+                # add
+                sql3 = '''insert into procstatus (sid,pos,updatetm) 
+                values ('{0}',{1},'{2}')
+                '''.format(sid,pos,update_time)
+                #print( sql3 )
+                try:
+                    cursor.execute(sql3)
+                    self.dbcon.commit()
+                except:
+                    print("insert db error - [procstatus]")
+                    self.dbcon.rollback()
+                    
+        except:
+            print( "Error: unable to fecth data - [procstatus]" )
+        
 
     def saveFilterRes( self, sid, resary ):
         '''
@@ -95,14 +140,30 @@ class StockQuery( object ):
         2. 打包压缩结果图片
         3. 更新进度表
         '''
-        pass
+        #
+        self.updatePos( sid, 100 )
     
     def queryPos( self, sid ):
         
-        pos = 101
-        
-        res = { 'pos': pos }
-        return res
+        sql = '''select pos from procstatus where sid = '{0}'
+            '''.format( sid )
+        try:
+            cursor = self.dbcon.cursor()
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            a = []
+            pos = 0
+            for row in results:
+                pos = row[0]
+                a.append(pos)
+            if len(a) > 0:
+                pos = a[0]
+            res = { 'pos': pos }
+            return res
+                    
+        except:
+            print( "Error: unable to fecth data - [procstatus]" )
+            return ""
     
     
     def queryFilterRes( self, sid ):
