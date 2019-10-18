@@ -47,32 +47,32 @@ class DerivativeFilter( object ):
             self.basefactor2 = self.createFactor( self.basefactor1 )
 
         stockquery = StockQuery( self.base_path )
-        stocklist = stockquery.getStockBasicData()
-        print( stocklist )
-        return;
-        length = len(stocklist)
-        length = 200
+        stockdata = stockquery.getStockBasicData()
+        #print( stocklist )
+        length = len(stockdata.values)
         # 股票处理循环
+        length = 100
         for i in range(length):
             '''
             更新处理进度
             '''
+            stockquery.updatePos( self.sid, (i*1.0/length)*100 )
             
-            
-            dl = stockquery.getSingleStockData( stocklist[i], self.basestock_num )
+            ts_code = stockdata.values[i,0]
+            dl = stockquery.getSingleStockData( ts_code, self.basestock_num )
             if len(dl) == self.basestock_num:
                 # 处理
                 if not self.second_derivative:
-                    self.filterStockbyDerivativeOne( stockquery, stocklist[i], dl )
+                    self.filterStockbyDerivativeOne( stockquery, ts_code, dl )
                 else:
-                    self.filterStockbyDerivativeTwo( stockquery, stocklist[i], dl )
+                    self.filterStockbyDerivativeTwo( stockquery, ts_code, dl )
             else:
                 # 记录错误日志
-                pass
-                
+                print( "Error: fecth stock data - {}".format(ts_code) )
         # 输出股票代码到数据库
         resary = np.array( self.resultStock )
         stockquery.saveFilterRes( self.sid, resary )
+        
 
     def createFactor( self, ls ):
         # 斜率计算，求一阶导
