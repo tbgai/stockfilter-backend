@@ -6,6 +6,7 @@ Created on Tue Sep 10 21:40:42 2019
 
 parse stock data from db
 """
+import os, tarfile
 import time
 import datetime
 import pandas as pd
@@ -134,14 +135,32 @@ class StockQuery( object ):
             print( "Error: unable to fecth data - [procstatus]" )
         
 
+    def make_targz(self, output_filename, source_dir):
+        with tarfile.open(output_filename, "w:gz") as tar:
+            tar.add(source_dir, arcname=os.path.basename(source_dir))
+
     def saveFilterRes( self, sid, resary ):
-        '''
-        1. 更新结果表
-        2. 打包压缩结果图片
-        3. 更新进度表
-        '''
-        #
-        self.updatePos( sid, 100 )
+
+        if len(resary) > 0:
+            resinfo = ','.join(resary);
+            
+            source_dir = ct.OUTPUT_DIR + "{}".format(sid)
+            zfile = "{}.tar.gz".format(sid)
+            self.make_targz( '{0}{1}'.format(ct.OUTPUT_DIR,zfile), source_dir )
+            
+            sql = '''insert into filterres (sid,resinfo,zfile,updatetm) values 
+            ('{0}','{1}','{2}','{3}')'''.format( sid, resinfo, zfile, 
+            time.strftime("%Y%m%d%H%M%S") )
+            
+            try:
+                cursor = self.dbcon.cursor()
+                cursor.execute(sql)
+                self.dbcon.commit()
+            except:
+                self.dbcon.rollback()
+                print( "Error: unable to insert filter res - [filterres]" )
+            
+            self.updatePos( sid, 100 )
     
     def queryPos( self, sid ):
         
