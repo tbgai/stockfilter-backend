@@ -6,6 +6,7 @@ Created on Tue Sep 10 21:32:58 2019
 
 stock filter algorithm method ： Derivative one / two
 """
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from stkfilter.stockquery import StockQuery
@@ -29,7 +30,11 @@ class DerivativeFilter( object ):
         self.basefactor1 = [] # 基准数据的一阶导
         self.basefactor2 = [] # 基准数据的二阶导
         self.resultStock = [] # 过滤出来的股票列表
-    
+
+        self.output_path = self.output_path + "{}/".format(self.sid)
+        if not os.path.exists(self.output_path):
+            os.makedirs(self.output_path)
+
     def filterStock( self ):
         
         '''
@@ -51,11 +56,9 @@ class DerivativeFilter( object ):
         #print( stocklist )
         length = len(stockdata.values)
         # 股票处理循环
-        length = 100
+        length = 10
         for i in range(length):
-            '''
-            更新处理进度
-            '''
+
             stockquery.updatePos( self.sid, (i*1.0/length)*100 )
             
             ts_code = stockdata.values[i,0]
@@ -70,8 +73,8 @@ class DerivativeFilter( object ):
                 # 记录错误日志
                 print( "Error: fecth stock data - {}".format(ts_code) )
         # 输出股票代码到数据库
-        resary = np.array( self.resultStock )
-        stockquery.saveFilterRes( self.sid, resary )
+        #resary = np.array( self.resultStock )
+        stockquery.saveFilterRes( self.sid, self.resultStock )
         
 
     def createFactor( self, ls ):
