@@ -187,10 +187,22 @@ class StockQuery( object ):
     
     def queryFilterRes( self, sid ):
         
-        res = { 'res': '000111.SZ,000222.SZ,000234.SZ',
-               'purl':'http://47.104.252.239/test.tar.gz' }
-        return res
-    
+        sql = '''select resinfo,zfile from filterres where sid='{}'
+        '''.format( sid )
+        try:
+            cursor = self.dbcon.cursor()
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            resinfo = ""
+            zfile = ""
+            for row in results:
+                resinfo = row[0]
+                zfile = row[1]
+            res = { 'res':resinfo, 'purl':ct.DOWNLOAD_URL+zfile }
+            return res
+        except:
+            print( "Error: unable to fetch res data - [filterres]" )
+            return ""
     
     
     
