@@ -160,7 +160,7 @@ class StockQuery( object ):
                 self.dbcon.rollback()
                 print( "Error: unable to insert filter res - [filterres]" )
             
-            self.updatePos( sid, 100 )
+        self.updatePos( sid, 100 )
     
     def queryPos( self, sid ):
         
