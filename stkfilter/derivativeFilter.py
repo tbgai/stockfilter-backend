@@ -112,16 +112,17 @@ class DerivativeFilter( object ):
             dl = stockquery.getSingleStockData( stock_code, self.result_days )
             if len(dl) > 0:
                 plt.cla()
-                plt.title( stock_code+u"最近"+str(self.result_days)+u"个交易日", 
-                          fontproperties="SimHei" )
+                #plt.title( stock_code+u"最近"+str(self.result_days)+u"个交易日", 
+                #          fontproperties="SimHei" )
+                plt.title( stock_code+u" recent"+str(self.result_days)+u"days" )
                 x = np.arange( self.result_days )
                 plt.plot( x, dl, "bo-" )
                 plt.savefig( self.output_path+stock_code+"_"+str(self.result_days)+".jpg", dpi=600 )
                 
             
             plt.cla()
-            plt.title( stock_code+u"与基准模型一阶变化比较(最近"+str(self.basestock_num)
-                                +u"个交易日)", fontproperties="SimHei" )
+            plt.title( stock_code+u" vs basedata derivative-one(recent"+str(self.basestock_num)
+                                +u"days)" )
             x = np.arange(len(self.basefactor1))
             plt.plot( x, self.basefactor1, "ro-", x, fls, "bo--" )
             plt.savefig( self.output_path+stock_code+"_D1"+".jpg", dpi=600 )
@@ -139,16 +140,14 @@ class DerivativeFilter( object ):
             dl = stockquery.getSingleStockData( stock_code, self.result_days )
             if len(dl) > 0:
                 plt.cla()
-                plt.title( stock_code+u"最近"+str(self.result_days)+u"个交易日", 
-                          fontproperties="SimHei" )
+                plt.title( stock_code+u" recent"+str(self.result_days)+u"days" )
                 x = np.arange( self.result_days )
                 plt.plot( x, dl, "bo-" )
                 plt.savefig( self.output_path+stock_code+"_"+str(self.result_days)+".jpg", dpi=600 )
                 
-            
             plt.cla()
-            plt.title( stock_code+u"与基准模型二阶变化比较(最近"+str(self.basestock_num)
-                                +u"个交易日)", fontproperties="SimHei" )
+            plt.title( stock_code+u" vs basedata derivative-two(recent"+str(self.basestock_num)
+                                +u"days)" )
             x = np.arange(len(self.basefactor1))
             plt.plot( x, self.basefactor1, "ro-", x, fls, "bo--" )
             plt.savefig( self.output_path+stock_code+"_D2"+".jpg", dpi=600 )
