@@ -22,7 +22,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    filtermgr = FilterMgr()
+    filtermgr = FilterMgr(base_path)
     return filtermgr.version()
 
 @app.route('/sf/api/v1.0/stockfilter/', methods=['POST'])
