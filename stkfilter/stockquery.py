@@ -86,6 +86,7 @@ class StockQuery( object ):
             dl = df.ix[:,1].values.tolist()
             dl.reverse()
             if len(dl) < length:
+                print( "Error: sql:{0}".format(sql) )
                 return []
             else:
                 return dl
