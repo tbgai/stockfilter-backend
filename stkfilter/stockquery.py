@@ -198,7 +198,10 @@ class StockQuery( object ):
             for row in results:
                 resinfo = row[0]
                 zfile = row[1]
-            res = { 'res':resinfo, 'purl':ct.DOWNLOAD_URL+zfile }
+            if len(resinfo) > 0:
+                res = { 'res':resinfo, 'purl':ct.DOWNLOAD_URL+zfile }
+            else:
+                res = { 'res':resinfo, 'purl':zfile }
             return res
         except:
             print( "Error: unable to fetch res data - [filterres]" )
