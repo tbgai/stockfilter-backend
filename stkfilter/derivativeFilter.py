@@ -56,7 +56,7 @@ class DerivativeFilter( object ):
         #print( stocklist )
         length = len(stockdata.values)
         # 股票处理循环
-        length = 10
+        #length = 100
         for i in range(length):
 
             stockquery.updatePos( self.sid, (i*1.0/length)*100 )
