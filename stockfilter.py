@@ -48,4 +48,12 @@ def queryres():
     rst.headers['Access-Control-Allow-Origin'] = '*'
     return rst
 
+@app.route('/sf/api/v1.0/stockgraph/', methods=['POST'])
+def stockgraph():
+    filtermgr = FilterMgr( base_path )
+    rst = make_response( json.dumps( filtermgr.stockgraph(request) ) )
+    rst.headers['Access-Control-Allow-Origin'] = '*'
+    rst.mimetype = 'application/json'
+    return rst
+
 
