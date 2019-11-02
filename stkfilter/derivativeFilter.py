@@ -15,8 +15,8 @@ from stkfilter import cons as ct
 
 class DerivativeFilter( object ):
 
-    def __init__( self, sid, path, basestock, second_derivative, delta_one, 
-                 delta_two, result_days ):
+    def __init__( self, sid, path, basestock, second_derivative=1, delta_one=1.0, 
+                 delta_two=1.0, result_days=100 ):
         self.sid = sid
         self.base_path = path
         self.basestock = basestock
@@ -31,12 +31,12 @@ class DerivativeFilter( object ):
         self.basefactor2 = [] # 基准数据的二阶导
         self.resultStock = [] # 过滤出来的股票列表
 
+    def filterStock( self ):
+        
         self.output_path = self.output_path + "{}/".format(self.sid)
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
 
-    def filterStock( self ):
-        
         '''
         提前计算出基础数据的一阶导，二阶导数据
         1. 获取股票列表数据，进行循环
@@ -56,7 +56,6 @@ class DerivativeFilter( object ):
         #print( stocklist )
         length = len(stockdata.values)
         # 股票处理循环
-        #length = 100
         for i in range(length):
 
             stockquery.updatePos( self.sid, (i*1.0/length)*100 )
@@ -75,7 +74,6 @@ class DerivativeFilter( object ):
         # 输出股票代码到数据库
         #resary = np.array( self.resultStock )
         stockquery.saveFilterRes( self.sid, self.resultStock )
-        
 
     def createFactor( self, ls ):
         # 斜率计算，求一阶导
@@ -175,4 +173,44 @@ class DerivativeFilter( object ):
         else:
             return False
 
+    def baseGraph( self ):
+
+        self.output_path = self.output_path + "base_{}/".format(self.sid)
+        if not os.path.exists(self.output_path):
+            os.makedirs(self.output_path)
+        
+        basefactor1 = [] # 基准数据的一阶导
+        basefactor2 = [] # 基准数据的二阶导
+        basefactor1 = self.createFactor( self.basestock )
+        basefactor2 = self.createFactor( basefactor1 )
+        fbasestock = []
+        for item in self.basestock:
+            fbasestock.append( float(item) )
+        imgls = []
+        
+        # 绘制基准数据
+        plt.cla()
+        plt.title( u"base data" )
+        x = np.arange(len(fbasestock))
+        plt.plot( x, fbasestock, "ro-" )
+        plt.savefig( self.output_path+"baseimg1.jpg", dpi=600 )
+        imgls.append( ct.DOWNLOAD_URL+"base_{0}/{1}".format( self.sid, "baseimg1.jpg" ) )
+        
+        # 绘制一阶数据
+        plt.cla()
+        plt.title( u"base data derivative-one" )
+        x = np.arange(len(basefactor1))
+        plt.plot( x, basefactor1, "ro-" )
+        plt.savefig( self.output_path+"baseimg2.jpg", dpi=600 )
+        imgls.append( ct.DOWNLOAD_URL+"base_{0}/{1}".format( self.sid, "baseimg2.jpg" ) )
+        
+        # 绘制二阶数据
+        plt.cla()
+        plt.title( u"base data derivative-two" )
+        x = np.arange(len(basefactor2))
+        plt.plot( x, basefactor2, "ro-" )
+        plt.savefig( self.output_path+"baseimg3.jpg", dpi=600 )
+        imgls.append( ct.DOWNLOAD_URL+"base_{0}/{1}".format( self.sid, "baseimg3.jpg" ) )
+
+        return imgls
 
