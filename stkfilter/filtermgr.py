@@ -74,8 +74,20 @@ class FilterMgr( object ):
         '''
         stockquery = StockQuery( self.base_path )
         return stockquery.queryFilterRes( sid )
-        
 
+    def stockgraph( self, request ):
+
+        SID = uuid.uuid1()
+        strSID = "{}".format( SID )
+        basestk = request.form['basestk'].split(',')
+
+        dfs = DerivativeFilter( strSID, self.base_path, basestk )
+        imgls = dfs.baseGraph()
+        if len(imgls) == 3:
+            res = { 'img1':imgls[0], 'img2':imgls[1], 'img3':imgls[2] }
+        else:
+            res = { 'img1':'', 'img2':'', 'img3':'' }
+        return res
 
 
 
