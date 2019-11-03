@@ -63,7 +63,7 @@ class StockQuery( object ):
             print( "Error: unable to fecth stocklist data" )
         
 
-    def getSingleStockData( self, ts_code, length ):
+    def getSingleStockData( self, ts_code, length, len_strict ):
         
         today = datetime.date.today()
         hisday = today - datetime.timedelta(days=2*length)
@@ -85,7 +85,7 @@ class StockQuery( object ):
             df = pd.DataFrame( a, columns=['trade_date','vclose'], index=np.arange(len(a)))
             dl = df.ix[:,1].values.tolist()
             dl.reverse()
-            if len(dl) < length:
+            if len_strict and (len(dl) < length):
                 print( "Error: sql:{0}".format(sql) )
                 return []
             else:
@@ -140,7 +140,7 @@ class StockQuery( object ):
         with tarfile.open(output_filename, "w:gz") as tar:
             tar.add(source_dir, arcname=os.path.basename(source_dir))
 
-    def saveFilterRes( self, sid, resary ):
+    def saveFilterRes( self, sid, resary, resimgary ):
 
         if len(resary) > 0:
             resinfo = ','.join(resary);
@@ -149,8 +149,12 @@ class StockQuery( object ):
             zfile = "{}.tar.gz".format(sid)
             self.make_targz( '{0}{1}'.format(ct.OUTPUT_DIR,zfile), source_dir )
             
-            sql = '''insert into filterres (sid,resinfo,zfile,updatetm) values 
-            ('{0}','{1}','{2}','{3}')'''.format( sid, resinfo, zfile, 
+            df = pd.DataFrame( resimgary, columns=['stock_code','img1','img2'], 
+                              index=np.arange(len(resimgary)))
+            strimg = df.to_json(orient='split')
+            print( strimg )
+            sql = '''insert into filterres (sid,resinfo,zfile,imgs,updatetm) values 
+            ('{0}','{1}','{2}','{3}','{4}')'''.format( sid, resinfo, zfile, strimg, 
             time.strftime("%Y%m%d%H%M%S") )
             
             try:
@@ -188,7 +192,7 @@ class StockQuery( object ):
     
     def queryFilterRes( self, sid ):
         
-        sql = '''select resinfo,zfile from filterres where sid='{}'
+        sql = '''select resinfo,zfile,imgs from filterres where sid='{}'
         '''.format( sid )
         try:
             cursor = self.dbcon.cursor()
@@ -196,13 +200,15 @@ class StockQuery( object ):
             results = cursor.fetchall()
             resinfo = ""
             zfile = ""
+            imgs = ""
             for row in results:
                 resinfo = row[0]
                 zfile = row[1]
+                imgs = row[2]
             if len(resinfo) > 0:
-                res = { 'res':resinfo, 'purl':ct.DOWNLOAD_URL+zfile }
+                res = { 'res':resinfo, 'purl':ct.DOWNLOAD_URL+zfile, 'imgs':imgs }
             else:
-                res = { 'res':resinfo, 'purl':zfile }
+                res = { 'res':resinfo, 'purl':zfile, 'imgs':imgs }
             return res
         except:
             print( "Error: unable to fetch res data - [filterres]" )
