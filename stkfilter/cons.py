@@ -9,5 +9,7 @@ VERSION = '0.1.0'
 
 CONFIG_FNAME = '/config.yaml'
 OUTPUT_DIR = 'd:/output/'
-DOWNLOAD_URL = 'http://47.104.252.239/'
+# /home/tbg/stockfilter-backend/dlimgs/
+DOWNLOAD_URL = 'http://47.104.252.239/dlimgs/'
+IMG_DPI = 200
 
