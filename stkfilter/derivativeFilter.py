@@ -30,6 +30,7 @@ class DerivativeFilter( object ):
         self.basefactor1 = [] # 基准数据的一阶导
         self.basefactor2 = [] # 基准数据的二阶导
         self.resultStock = [] # 过滤出来的股票列表
+        self.resultStockImg = [] # 过滤出来的股票图形列表
 
     def filterStock( self ):
         
@@ -55,13 +56,14 @@ class DerivativeFilter( object ):
         stockdata = stockquery.getStockBasicData()
         #print( stocklist )
         length = len(stockdata.values)
+        #length = 10
         # 股票处理循环
         for i in range(length):
 
             stockquery.updatePos( self.sid, (i*1.0/length)*100 )
             
             ts_code = stockdata.values[i,0]
-            dl = stockquery.getSingleStockData( ts_code, self.basestock_num )
+            dl = stockquery.getSingleStockData( ts_code, self.basestock_num, True )
             if len(dl) == self.basestock_num:
                 # 处理
                 if not self.second_derivative:
@@ -73,7 +75,7 @@ class DerivativeFilter( object ):
                 print( "Error: fecth stock data - {}".format(ts_code) )
         # 输出股票代码到数据库
         #resary = np.array( self.resultStock )
-        stockquery.saveFilterRes( self.sid, self.resultStock )
+        stockquery.saveFilterRes( self.sid, self.resultStock, self.resultStockImg )
 
     def createFactor( self, ls ):
         # 斜率计算，求一阶导
@@ -94,20 +96,13 @@ class DerivativeFilter( object ):
         fls = self.createFactor( stockdata )
         if self.compareFactor( self.basefactor1, fls ):
             self.resultStock.append( stock_code )
+            
             '''
-            绘制基准数与股票值的图
             绘制一阶导值得图
             绘制该股票仅100交易日图
             '''
-            '''
-            plt.cla()
-            plt.title( stock_code+u"与基准股票值比较", fontproperties="SimHei" )
-            x = np.arange(self.basestock_num)
-            plt.plot( x, self.basestock, "ro-", x, stockdata, "bo--" )
-            plt.savefig( self.output_path+stock_code+".jpg", dpi=600 )
-            '''
-            
-            dl = stockquery.getSingleStockData( stock_code, self.result_days )
+            img1 = ""
+            dl = stockquery.getSingleStockData( stock_code, self.result_days, False )
             if len(dl) > 0:
                 plt.cla()
                 #plt.title( stock_code+u"最近"+str(self.result_days)+u"个交易日", 
@@ -115,15 +110,22 @@ class DerivativeFilter( object ):
                 plt.title( stock_code+u" recent"+str(self.result_days)+u"days" )
                 x = np.arange( self.result_days )
                 plt.plot( x, dl, "bo-" )
-                plt.savefig( self.output_path+stock_code+"_"+str(self.result_days)+".jpg", dpi=600 )
-                
+                plt.savefig( self.output_path+stock_code+"_"+str(self.result_days)+".jpg", 
+                            dpi=ct.IMG_DPI )
+                img1 = ct.DOWNLOAD_URL+self.sid+"/"+stock_code+"_"+str(self.result_days)+".jpg"
+            else:
+                img1 = ct.DOWNLOAD_URL+"null.jpg"
             
             plt.cla()
             plt.title( stock_code+u" vs basedata derivative-one(recent"+str(self.basestock_num)
                                 +u"days)" )
             x = np.arange(len(self.basefactor1))
             plt.plot( x, self.basefactor1, "ro-", x, fls, "bo--" )
-            plt.savefig( self.output_path+stock_code+"_D1"+".jpg", dpi=600 )
+            plt.savefig( self.output_path+stock_code+"_D1"+".jpg", 
+                        dpi=ct.IMG_DPI )
+            img2 = ct.DOWNLOAD_URL+self.sid+"/"+stock_code+"_D1"+".jpg"
+            
+            self.resultStockImg.append([stock_code, img1, img2])
 
     def filterStockbyDerivativeTwo( self, stockquery, stock_code, stockdata ):
         # 通过求二阶导来对股票进行过滤
@@ -135,20 +137,29 @@ class DerivativeFilter( object ):
             绘制二阶导值得图
             绘制该股票仅100交易日图
             '''
-            dl = stockquery.getSingleStockData( stock_code, self.result_days )
+            img1 = ""
+            dl = stockquery.getSingleStockData( stock_code, self.result_days, False )
             if len(dl) > 0:
                 plt.cla()
                 plt.title( stock_code+u" recent"+str(self.result_days)+u"days" )
                 x = np.arange( self.result_days )
                 plt.plot( x, dl, "bo-" )
-                plt.savefig( self.output_path+stock_code+"_"+str(self.result_days)+".jpg", dpi=600 )
+                plt.savefig( self.output_path+stock_code+"_"+str(self.result_days)+".jpg", 
+                            dpi=ct.IMG_DPI )
+                img1 = ct.DOWNLOAD_URL+self.sid+"/"+stock_code+"_"+str(self.result_days)+".jpg"
+            else:
+                img1 = ct.DOWNLOAD_URL+"null.jpg"
                 
             plt.cla()
             plt.title( stock_code+u" vs basedata derivative-two(recent"+str(self.basestock_num)
                                 +u"days)" )
             x = np.arange(len(self.basefactor1))
             plt.plot( x, self.basefactor1, "ro-", x, fls, "bo--" )
-            plt.savefig( self.output_path+stock_code+"_D2"+".jpg", dpi=600 )
+            plt.savefig( self.output_path+stock_code+"_D2"+".jpg", 
+                        dpi=ct.IMG_DPI )
+            img2 = ct.DOWNLOAD_URL+self.sid+"/"+stock_code+"_D2"+".jpg"
+            
+            self.resultStockImg.append([stock_code, img1, img2])
 
     def compareFactor( self, basefls, fls ):
         # 斜率因子比较
@@ -161,7 +172,6 @@ class DerivativeFilter( object ):
         for i in range(len(basefls)):
             if abs(basefls[i]-fls[i]) < delta:
                 count = count + 1
-        
         '''
         此处要求所有的节点数据均在设定的delta值内，这样做有很大局限性
         可能部分股票值的比值更好，但可能会被排除外
@@ -193,7 +203,7 @@ class DerivativeFilter( object ):
         plt.title( u"base data" )
         x = np.arange(len(fbasestock))
         plt.plot( x, fbasestock, "ro-" )
-        plt.savefig( self.output_path+"baseimg1.jpg", dpi=600 )
+        plt.savefig( self.output_path+"baseimg1.jpg", dpi=ct.IMG_DPI )
         imgls.append( ct.DOWNLOAD_URL+"base_{0}/{1}".format( self.sid, "baseimg1.jpg" ) )
         
         # 绘制一阶数据
@@ -201,7 +211,7 @@ class DerivativeFilter( object ):
         plt.title( u"base data derivative-one" )
         x = np.arange(len(basefactor1))
         plt.plot( x, basefactor1, "ro-" )
-        plt.savefig( self.output_path+"baseimg2.jpg", dpi=600 )
+        plt.savefig( self.output_path+"baseimg2.jpg", dpi=ct.IMG_DPI )
         imgls.append( ct.DOWNLOAD_URL+"base_{0}/{1}".format( self.sid, "baseimg2.jpg" ) )
         
         # 绘制二阶数据
@@ -209,7 +219,7 @@ class DerivativeFilter( object ):
         plt.title( u"base data derivative-two" )
         x = np.arange(len(basefactor2))
         plt.plot( x, basefactor2, "ro-" )
-        plt.savefig( self.output_path+"baseimg3.jpg", dpi=600 )
+        plt.savefig( self.output_path+"baseimg3.jpg", dpi=ct.IMG_DPI )
         imgls.append( ct.DOWNLOAD_URL+"base_{0}/{1}".format( self.sid, "baseimg3.jpg" ) )
 
         return imgls
