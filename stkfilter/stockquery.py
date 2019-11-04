@@ -46,7 +46,7 @@ class StockQuery( object ):
     def getStockBasicData( self ):
         
         # 获取所有的股票列表信息
-        sql = 'select ts_code,symbol from stock_basic'
+        sql = 'select ts_code,symbol,name from stock_basic'
         cursor = self.dbcon.cursor()
         try:
             cursor.execute( sql )
@@ -55,9 +55,10 @@ class StockQuery( object ):
             for row in results:
                 ts_code = row[0]
                 symbol = row[1]
-                a.append([ts_code,symbol])
+                name = row[2]
+                a.append([ts_code,symbol,name])
             
-            df = pd.DataFrame( a, columns=['ts_code','symbol'], index=np.arange(len(a)))
+            df = pd.DataFrame( a, columns=['ts_code','symbol','name'], index=np.arange(len(a)))
             return df
         except:
             print( "Error: unable to fecth stocklist data" )
@@ -151,8 +152,7 @@ class StockQuery( object ):
             
             df = pd.DataFrame( resimgary, columns=['stock_code','img1','img2'], 
                               index=np.arange(len(resimgary)))
-            strimg = df.to_json(orient='split')
-            print( strimg )
+            strimg = df.to_json(orient='split',force_ascii=False)
             sql = '''insert into filterres (sid,resinfo,zfile,imgs,updatetm) values 
             ('{0}','{1}','{2}','{3}','{4}')'''.format( sid, resinfo, zfile, strimg, 
             time.strftime("%Y%m%d%H%M%S") )
