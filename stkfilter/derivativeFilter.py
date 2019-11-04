@@ -63,13 +63,16 @@ class DerivativeFilter( object ):
             stockquery.updatePos( self.sid, (i*1.0/length)*100 )
             
             ts_code = stockdata.values[i,0]
+            stock_name = stockdata.values[i,2]
             dl = stockquery.getSingleStockData( ts_code, self.basestock_num, True )
             if len(dl) == self.basestock_num:
                 # 处理
                 if not self.second_derivative:
-                    self.filterStockbyDerivativeOne( stockquery, ts_code, dl )
+                    self.filterStockbyDerivativeOne( stockquery, ts_code, 
+                                                    stock_name, dl )
                 else:
-                    self.filterStockbyDerivativeTwo( stockquery, ts_code, dl )
+                    self.filterStockbyDerivativeTwo( stockquery, ts_code, 
+                                                    stock_name, dl )
             else:
                 # 记录错误日志
                 print( "Error: fecth stock data - {}".format(ts_code) )
@@ -91,7 +94,7 @@ class DerivativeFilter( object ):
             i = i+1
         return factorls
 
-    def filterStockbyDerivativeOne( self, stockquery, stock_code, stockdata ):
+    def filterStockbyDerivativeOne( self, stockquery, stock_code, stock_name, stockdata ):
         # 通过求导来对单个股票数据进行过滤
         fls = self.createFactor( stockdata )
         if self.compareFactor( self.basefactor1, fls ):
@@ -125,9 +128,10 @@ class DerivativeFilter( object ):
                         dpi=ct.IMG_DPI )
             img2 = ct.DOWNLOAD_URL+self.sid+"/"+stock_code+"_D1"+".jpg"
             
-            self.resultStockImg.append([stock_code, img1, img2])
+            strname = stock_code+"({})".format(stock_name)
+            self.resultStockImg.append([strname, img1, img2])
 
-    def filterStockbyDerivativeTwo( self, stockquery, stock_code, stockdata ):
+    def filterStockbyDerivativeTwo( self, stockquery, stock_code, stock_name, stockdata ):
         # 通过求二阶导来对股票进行过滤
         fls = self.createFactor( stockdata )
         fls2 = self.createFactor( fls )
@@ -159,7 +163,8 @@ class DerivativeFilter( object ):
                         dpi=ct.IMG_DPI )
             img2 = ct.DOWNLOAD_URL+self.sid+"/"+stock_code+"_D2"+".jpg"
             
-            self.resultStockImg.append([stock_code, img1, img2])
+            strname = stock_code+"({})".format(stock_name)
+            self.resultStockImg.append([strname, img1, img2])
 
     def compareFactor( self, basefls, fls ):
         # 斜率因子比较
